@@ -1,17 +1,90 @@
 {
   "name": "@ldesign/monitor",
   "version": "0.1.0",
-  "description": "LDesign 监控系统 - 性能监控、错误追踪、用户行为分析",
-  "keywords": ["ldesign", "monitor", "performance", "error-tracking", "analytics"],
+  "description": "LDesign 监控系统 - 性能监控、错误追踪、用户行为分析、会话回放",
+  "keywords": ["ldesign", "monitor", "performance", "error-tracking", "analytics", "web-vitals", "session-replay"],
   "author": "LDesign Team",
   "license": "MIT",
   "type": "module",
   "main": "./lib/index.cjs",
   "module": "./es/index.js",
-  "scripts": {"build": "ldesign-builder build -f esm,cjs,dts"},
-  "dependencies": {"@ldesign/logger": "workspace:*", "@ldesign/http": "workspace:*"},
-  "devDependencies": {"@ldesign/builder": "workspace:*", "typescript": "^5.7.3"}
+  "types": "./es/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./es/index.d.ts",
+      "import": "./es/index.js",
+      "require": "./lib/index.cjs"
+    },
+    "./client": {
+      "types": "./es/client/index.d.ts",
+      "import": "./es/client/index.js",
+      "require": "./lib/client/index.cjs"
+    },
+    "./server": {
+      "types": "./es/server/index.d.ts",
+      "import": "./es/server/index.js",
+      "require": "./lib/server/index.cjs"
+    },
+    "./vue": {
+      "types": "./es/client/integrations/vue.d.ts",
+      "import": "./es/client/integrations/vue.js",
+      "require": "./lib/client/integrations/vue.cjs"
+    },
+    "./react": {
+      "types": "./es/client/integrations/react.d.ts",
+      "import": "./es/client/integrations/react.js",
+      "require": "./lib/client/integrations/react.cjs"
+    }
+  },
+  "files": ["es", "lib", "README.md", "CHANGELOG.md"],
+  "scripts": {
+    "build": "ldesign-builder build -f esm,cjs,dts",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage"
+  },
+  "dependencies": {
+    "@ldesign/logger": "workspace:*",
+    "@ldesign/http": "workspace:*",
+    "@ldesign/shared": "workspace:*",
+    "web-vitals": "^3.5.0",
+    "rrweb": "^2.0.0-alpha.11"
+  },
+  "optionalDependencies": {
+    "source-map": "^0.7.4"
+  },
+  "devDependencies": {
+    "@ldesign/builder": "workspace:*",
+    "@types/node": "^20.5.9",
+    "@types/react": "^18.2.21",
+    "@types/react-dom": "^18.2.7",
+    "typescript": "^5.7.3",
+    "vitest": "^1.0.0",
+    "@vitest/coverage-v8": "^1.0.0",
+    "jsdom": "^23.0.0",
+    "vue": "^3.3.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "rrweb-player": "^2.0.0-alpha.11"
+  },
+  "peerDependencies": {
+    "vue": "^3.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "vue": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  }
 }
+
+
 
 
 
