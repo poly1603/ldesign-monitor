@@ -13,6 +13,7 @@ import type {
 } from '../types'
 import { EventEmitter } from './EventEmitter'
 import { generateId, now } from '../utils'
+import { ConfigValidator } from '../config/ConfigValidator'
 
 /**
  * Monitor 核心类
@@ -209,27 +210,8 @@ export class Monitor extends EventEmitter implements IMonitor {
    * 归一化配置
    */
   private normalizeConfig(config: MonitorConfig): Required<MonitorConfig> {
-    return {
-      dsn: config.dsn,
-      projectId: config.projectId,
-      environment: config.environment || 'production',
-      sampleRate: config.sampleRate ?? 1.0,
-      enablePerformance: config.enablePerformance ?? true,
-      enableError: config.enableError ?? true,
-      enableBehavior: config.enableBehavior ?? true,
-      enableAPI: config.enableAPI ?? true,
-      enableReplay: config.enableReplay ?? false,
-      batch: {
-        size: config.batch?.size ?? 10,
-        interval: config.batch?.interval ?? 5000,
-      },
-      retry: {
-        maxRetries: config.retry?.maxRetries ?? 3,
-        delay: config.retry?.delay ?? 1000,
-      },
-      debug: config.debug ?? false,
-      hooks: config.hooks || {},
-    }
+    // 使用配置验证器验证和规范化配置
+    return ConfigValidator.normalize(config)
   }
 
   /**
@@ -305,6 +287,24 @@ export class Monitor extends EventEmitter implements IMonitor {
   }
 
   /**
+   * 销毁监控器
+   * 清理所有资源，防止内存泄漏
+   */
+  destroy(): void {
+    this.enabled = false
+    this.breadcrumbs = []
+
+    // 清理所有事件监听器
+    this.removeAllListeners()
+
+    this.emit('destroy')
+
+    if (this.config.debug) {
+      console.log('[Monitor] Destroyed')
+    }
+  }
+
+  /**
    * 获取会话信息
    */
   private getSessionInfo() {
@@ -333,6 +333,20 @@ export class Monitor extends EventEmitter implements IMonitor {
 export function createMonitor(config: MonitorConfig): Monitor {
   return new Monitor(config)
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

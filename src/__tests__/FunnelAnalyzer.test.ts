@@ -174,3 +174,17 @@ describe('FunnelAnalyzer', () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+

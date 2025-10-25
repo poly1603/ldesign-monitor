@@ -317,5 +317,169 @@ export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+/**
+ * requestIdleCallback 的 Polyfill
+ * 优先使用原生 API，降级到 setTimeout
+ * 
+ * @param callback - 回调函数
+ * @param options - 选项
+ * @returns 取消函数
+ */
+export function requestIdleCallback(
+  callback: () => void,
+  options?: { timeout?: number }
+): number {
+  if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+    return window.requestIdleCallback(callback, options)
+  }
+
+  // Polyfill: 使用 setTimeout
+  const timeout = options?.timeout ?? 1
+  return setTimeout(callback, timeout) as unknown as number
+}
+
+/**
+ * cancelIdleCallback 的 Polyfill
+ * 
+ * @param id - requestIdleCallback 返回的 ID
+ */
+export function cancelIdleCallback(id: number): void {
+  if (typeof window !== 'undefined' && 'cancelIdleCallback' in window) {
+    window.cancelIdleCallback(id)
+  } else {
+    clearTimeout(id)
+  }
+}
+
+/**
+ * 带有最大等待时间的防抖函数
+ * 确保在最大等待时间内至少执行一次
+ * 
+ * @param func - 要防抖的函数
+ * @param wait - 等待时间（毫秒）
+ * @param maxWait - 最大等待时间（毫秒）
+ * @returns 防抖后的函数
+ */
+export function debounceWithMaxWait<T extends (...args: unknown[]) => unknown>(
+  func: T,
+  wait: number,
+  maxWait: number
+): (...args: Parameters<T>) => void {
+  let timeout: ReturnType<typeof setTimeout> | null = null
+  let lastCallTime = 0
+
+  return function (this: unknown, ...args: Parameters<T>) {
+    const now = Date.now()
+
+    if (timeout) {
+      clearTimeout(timeout)
+    }
+
+    // 检查是否超过最大等待时间
+    if (lastCallTime && now - lastCallTime >= maxWait) {
+      lastCallTime = now
+      func.apply(this, args)
+      return
+    }
+
+    timeout = setTimeout(() => {
+      lastCallTime = Date.now()
+      func.apply(this, args)
+    }, wait)
+
+    if (!lastCallTime) {
+      lastCallTime = now
+    }
+  }
+}
+
+/**
+ * 使用 RAF (requestAnimationFrame) 的节流函数
+ * 适用于需要与渲染同步的操作
+ * 
+ * @param func - 要节流的函数
+ * @returns 节流后的函数
+ */
+export function rafThrottle<T extends (...args: unknown[]) => unknown>(
+  func: T
+): (...args: Parameters<T>) => void {
+  let rafId: number | null = null
+  let latestArgs: Parameters<T> | null = null
+
+  return function (this: unknown, ...args: Parameters<T>) {
+    latestArgs = args
+
+    if (rafId === null) {
+      rafId = requestAnimationFrame(() => {
+        if (latestArgs) {
+          func.apply(this, latestArgs)
+          latestArgs = null
+        }
+        rafId = null
+      })
+    }
+  }
+}
+
+/**
+ * 批处理函数执行
+ * 将多次调用合并为一次批处理
+ * 
+ * @param func - 批处理函数，接收所有累积的参数
+ * @param wait - 等待时间（毫秒）
+ * @param maxSize - 最大批处理大小
+ * @returns 批处理包装函数
+ */
+export function batch<T>(
+  func: (items: T[]) => void,
+  wait: number = 100,
+  maxSize: number = 10
+): (item: T) => void {
+  let items: T[] = []
+  let timeout: ReturnType<typeof setTimeout> | null = null
+
+  const flush = () => {
+    if (items.length > 0) {
+      const batch = [...items]
+      items = []
+      func(batch)
+    }
+    if (timeout) {
+      clearTimeout(timeout)
+      timeout = null
+    }
+  }
+
+  return (item: T) => {
+    items.push(item)
+
+    // 达到最大批处理大小，立即执行
+    if (items.length >= maxSize) {
+      flush()
+      return
+    }
+
+    // 设置延迟执行
+    if (timeout) {
+      clearTimeout(timeout)
+    }
+    timeout = setTimeout(flush, wait)
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

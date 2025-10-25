@@ -291,10 +291,24 @@ export class Reporter implements IReporter {
   }
 
   /**
+   * 卸载处理器引用（用于清理）
+   */
+  private unloadHandler: (() => void) | null = null
+
+  /**
+   * 可见性变化处理器引用（用于清理）
+   */
+  private visibilityChangeHandler: (() => void) | null = null
+
+  /**
    * 设置页面卸载处理器
    */
   private setupUnloadHandler(): void {
-    const handleUnload = () => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    this.unloadHandler = () => {
       // 刷新批量队列
       if (this.batchQueue) {
         const data = this.batchQueue.flush()
@@ -307,24 +321,43 @@ export class Reporter implements IReporter {
       }
     }
 
+    this.visibilityChangeHandler = () => {
+      if (document.visibilityState === 'hidden') {
+        this.unloadHandler?.()
+      }
+    }
+
     // 监听多个卸载事件
-    window.addEventListener('beforeunload', handleUnload)
-    window.addEventListener('pagehide', handleUnload)
+    window.addEventListener('beforeunload', this.unloadHandler)
+    window.addEventListener('pagehide', this.unloadHandler)
 
     // 监听页面可见性变化（移动端）
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') {
-        handleUnload()
-      }
-    })
+    document.addEventListener('visibilitychange', this.visibilityChangeHandler)
   }
 
   /**
    * 销毁上报器
+   * 清理所有资源，防止内存泄漏
    */
   destroy(): void {
+    // 刷新并销毁批量队列
     if (this.batchQueue) {
       this.batchQueue.destroy()
+      this.batchQueue = null
+    }
+
+    // 移除事件监听器
+    if (typeof window !== 'undefined') {
+      if (this.unloadHandler) {
+        window.removeEventListener('beforeunload', this.unloadHandler)
+        window.removeEventListener('pagehide', this.unloadHandler)
+        this.unloadHandler = null
+      }
+
+      if (this.visibilityChangeHandler) {
+        document.removeEventListener('visibilitychange', this.visibilityChangeHandler)
+        this.visibilityChangeHandler = null
+      }
     }
   }
 }
@@ -338,6 +371,20 @@ export class Reporter implements IReporter {
 export function createReporter(config: ReporterConfig): Reporter {
   return new Reporter(config)
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -31,6 +31,21 @@ export class SessionManager {
    */
   private pageViewCount = 0
 
+  /**
+   * 活动事件处理器引用（用于清理）
+   */
+  private activityHandler: (() => void) | null = null
+
+  /**
+   * 可见性变化处理器引用（用于清理）
+   */
+  private visibilityHandler: (() => void) | null = null
+
+  /**
+   * 是否已销毁
+   */
+  private destroyed = false
+
   constructor() {
     this.session = this.createNewSession()
     this.lastActivityTime = now()
@@ -142,21 +157,25 @@ export class SessionManager {
    * 监听用户交互事件来更新活动时间
    */
   private setupActivityTracking(): void {
+    if (typeof window === 'undefined') {
+      return
+    }
+
     const events = ['mousedown', 'keydown', 'scroll', 'touchstart']
 
-    const handleActivity = () => {
+    this.activityHandler = () => {
       this.updateActivity()
     }
 
     events.forEach((event) => {
-      window.addEventListener(event, handleActivity, {
+      window.addEventListener(event, this.activityHandler!, {
         passive: true,
         capture: true,
       })
     })
 
     // 监听页面可见性变化
-    document.addEventListener('visibilitychange', () => {
+    this.visibilityHandler = () => {
       if (document.visibilityState === 'visible') {
         // 页面重新可见时，检查会话是否过期
         if (this.isSessionExpired()) {
@@ -166,7 +185,42 @@ export class SessionManager {
           this.updateActivity()
         }
       }
-    })
+    }
+
+    document.addEventListener('visibilitychange', this.visibilityHandler)
+  }
+
+  /**
+   * 销毁会话管理器
+   * 清理所有事件监听器，防止内存泄漏
+   */
+  destroy(): void {
+    if (this.destroyed) {
+      return
+    }
+
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    // 移除活动事件监听器
+    if (this.activityHandler) {
+      const events = ['mousedown', 'keydown', 'scroll', 'touchstart']
+      events.forEach((event) => {
+        window.removeEventListener(event, this.activityHandler!, {
+          capture: true,
+        })
+      })
+      this.activityHandler = null
+    }
+
+    // 移除可见性变化监听器
+    if (this.visibilityHandler) {
+      document.removeEventListener('visibilitychange', this.visibilityHandler)
+      this.visibilityHandler = null
+    }
+
+    this.destroyed = true
   }
 }
 
@@ -178,6 +232,20 @@ export class SessionManager {
 export function createSessionManager(): SessionManager {
   return new SessionManager()
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

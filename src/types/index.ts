@@ -104,7 +104,7 @@ export interface MonitorConfig {
   /**
    * 自定义钩子
    */
-  hooks: {
+  hooks?: {
     /**
      * 数据发送前的钩子
      */

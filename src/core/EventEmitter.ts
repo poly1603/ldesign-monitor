@@ -78,7 +78,46 @@ export class EventEmitter {
   listenerCount(event: string): number {
     return this.events.get(event)?.size ?? 0
   }
+
+  /**
+   * 获取所有事件名称
+   */
+  eventNames(): string[] {
+    return Array.from(this.events.keys())
+  }
+
+  /**
+   * 销毁事件发射器
+   * 清理所有事件监听器，防止内存泄漏
+   */
+  destroy(): void {
+    this.events.clear()
+  }
+
+  /**
+   * 检查是否有事件监听器
+   */
+  hasListeners(event?: string): boolean {
+    if (event) {
+      return this.listenerCount(event) > 0
+    }
+    return this.events.size > 0
+  }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

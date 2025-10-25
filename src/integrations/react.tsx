@@ -4,32 +4,43 @@
 
 /// <reference types="react" />
 
-import type { ReactNode } from 'react'
 import type { MonitorConfig } from '../types'
 import { createMonitor, type Monitor } from '../core/Monitor'
 
-// Use dynamic imports to avoid bundling React when not needed
-let React: any
-let createContext: any
-let useContext: any
-let useMemo: any
-let Component: any
+// React types (avoiding direct import)
+interface ReactNode {
+  [key: string]: unknown
+}
+
+interface ReactContext<T> {
+  Provider: React.ComponentType<{ value: T; children: ReactNode }>
+  Consumer: React.ComponentType<{ children: (value: T) => ReactNode }>
+}
+
+// React module interface
+interface ReactModule {
+  createContext<T>(defaultValue: T): ReactContext<T>
+  useContext<T>(context: ReactContext<T>): T
+  useMemo<T>(factory: () => T, deps: unknown[]): T
+  Component: React.ComponentClass
+  createElement(type: string | React.ComponentType, props: Record<string, unknown> | null, ...children: ReactNode[]): ReactNode
+}
+
+// Get React from global scope safely
+let React: ReactModule | null = null
 
 try {
-  const ReactModule = require('react')
-  React = ReactModule
-  createContext = ReactModule.createContext
-  useContext = ReactModule.useContext
-  useMemo = ReactModule.useMemo
-  Component = ReactModule.Component
-} catch (e) {
+  // @ts-expect-error - Dynamic access for optional peer dependency
+  React = globalThis.React
+} catch {
   // React not available
 }
 
-const MonitorContext = createContext ? createContext<Monitor | null>(null) : null
+const MonitorContext = React ? React.createContext<Monitor | null>(null) : null
 
 /**
  * Monitor provider props
+ * 监控器 Provider 属性
  */
 export interface MonitorProviderProps {
   config: MonitorConfig
@@ -38,13 +49,18 @@ export interface MonitorProviderProps {
 
 /**
  * Monitor provider
+ * 监控器 Provider 组件
+ * 
+ * @param props - Provider 属性
+ * @returns React 元素
+ * @throws 如果 React 不可用
  */
-export function MonitorProvider({ config, children }: MonitorProviderProps) {
-  if (!MonitorContext) {
-    throw new Error('React is not available')
+export function MonitorProvider({ config, children }: MonitorProviderProps): ReactNode {
+  if (!React || !MonitorContext) {
+    throw new Error('React is not available. Make sure React is properly loaded.')
   }
 
-  const monitor = useMemo(() => {
+  const monitor = React.useMemo(() => {
     const m = createMonitor(config)
     m.init()
     return m
@@ -55,31 +71,37 @@ export function MonitorProvider({ config, children }: MonitorProviderProps) {
 
 /**
  * Use monitor hook
+ * 使用监控器的 Hook
+ * 
+ * @returns Monitor 实例
+ * @throws 如果 React 不可用或 Monitor 未提供
  */
 export function useMonitor(): Monitor {
-  if (!useContext || !MonitorContext) {
-    throw new Error('React is not available')
+  if (!React || !MonitorContext) {
+    throw new Error('React is not available. Make sure React is properly loaded.')
   }
 
-  const monitor = useContext(MonitorContext)
+  const monitor = React.useContext(MonitorContext)
   if (!monitor) {
-    throw new Error('Monitor not found. Wrap your app with MonitorProvider.')
+    throw new Error('Monitor not found. Wrap your app with <MonitorProvider config={config}>.')
   }
   return monitor
 }
 
 /**
  * Error boundary props
+ * 错误边界组件属性
  */
 export interface ErrorBoundaryProps {
   monitor?: Monitor
   fallback?: ReactNode
-  onError?: (error: Error, errorInfo: any) => void
+  onError?: (error: Error, errorInfo: { componentStack: string }) => void
   children: ReactNode
 }
 
 /**
  * Error boundary state
+ * 错误边界组件状态
  */
 interface ErrorBoundaryState {
   hasError: boolean
@@ -87,8 +109,12 @@ interface ErrorBoundaryState {
 
 /**
  * Error boundary component
+ * 错误边界组件
+ * 捕获子组件的错误并上报到监控系统
  */
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends (React?.Component ?? class { }) {
+  state: ErrorBoundaryState
+
   constructor(props: ErrorBoundaryProps) {
     super(props)
     this.state = { hasError: false }
@@ -98,8 +124,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     return { hasError: true }
   }
 
-  componentDidCatch(error: Error, errorInfo: any): void {
-    const { monitor, onError } = this.props
+  componentDidCatch(error: Error, errorInfo: { componentStack: string }): void {
+    const { monitor, onError } = this.props as ErrorBoundaryProps
 
     if (monitor) {
       monitor.trackError(error, {
@@ -112,23 +138,37 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     }
   }
 
-  render() {
-    if (this.state.hasError) {
-      return this.props.fallback || React.createElement('div', null, 'Something went wrong.')
+  render(): ReactNode {
+    if (!React) {
+      throw new Error('React is not available')
     }
 
-    return this.props.children
+    if (this.state.hasError) {
+      const { fallback } = this.props as ErrorBoundaryProps
+      return fallback || React.createElement('div', null, 'Something went wrong.')
+    }
+
+    return (this.props as ErrorBoundaryProps).children
   }
 }
 
 /**
  * HOC to wrap component with error boundary
+ * 高阶组件：为组件添加错误边界
+ * 
+ * @param WrappedComponent - 要包装的组件
+ * @param fallback - 错误时显示的备用 UI
+ * @returns 包装后的组件
  */
-export function withErrorBoundary<P extends object>(
-  WrappedComponent: any,
+export function withErrorBoundary<P extends Record<string, unknown>>(
+  WrappedComponent: React.ComponentType<P>,
   fallback?: ReactNode
-) {
-  return function WithErrorBoundary(props: P) {
+): React.ComponentType<P> {
+  return function WithErrorBoundary(props: P): ReactNode {
+    if (!React) {
+      throw new Error('React is not available')
+    }
+
     const monitor = useMonitor()
     return React.createElement(
       ErrorBoundary,
