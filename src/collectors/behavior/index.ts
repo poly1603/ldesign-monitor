@@ -2,9 +2,11 @@
  * Behavior collectors
  */
 
-export * from './PageViewTracker'
 export * from './ClickTracker'
 export * from './FormTracker'
+export * from './PageViewTracker'
+export * from './ScrollDepthTracker'
+export * from './TimeOnPageTracker'
 
 
 

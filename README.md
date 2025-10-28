@@ -8,6 +8,7 @@
 
 ## ✨ 特性
 
+### 核心功能
 - 🚀 **性能监控** - Web Vitals (FCP/LCP/FID/CLS/TTFB/INP) ✅
 - 🐛 **错误追踪** - JavaScript错误、Promise错误、资源加载错误 ✅
 - 📊 **用户行为** - 页面浏览、点击、表单追踪 ✅
@@ -22,6 +23,37 @@
 - 📊 **可视化** - 仪表板组件 ✅
 - 🔒 **隐私优先** - 数据脱敏、GDPR合规 ✅
 
+### 增强功能 🆕
+- ⚡ **性能增强**
+  - 自定义性能标记 (Performance Marks) ✅
+  - Long Tasks 检测与分析 ✅
+  - 内存监控与泄漏检测 ✅
+  - FPS 监控 ✅
+  - 性能优化建议 ✅
+
+- 👤 **行为增强**
+  - 滚动深度追踪 ✅
+  - 页面停留时间统计 ✅
+  - 元素可见性追踪 ✅
+
+- 🔌 **API 增强**
+  - GraphQL 查询监控与分析 ✅
+  - GraphQL N+1 查询检测 ✅
+  - WebSocket 连接监控 ✅
+  - 请求字段使用统计 ✅
+
+- 💾 **离线缓存**
+  - IndexedDB 本地存储 ✅
+  - 网络恢复自动上报 ✅
+  - 过期数据自动清理 ✅
+
+- 🐛 **错误增强** 🆕
+  - 跨域错误详情捕获 ✅
+  - React/Vue 错误边界集成 ✅
+  - 智能错误分组 ✅
+  - 错误趋势分析 ✅
+  - 错误影响范围统计 ✅
+
 ## 📦 安装
 
 ```bash
@@ -29,6 +61,8 @@ pnpm add @ldesign/monitor
 ```
 
 ## 🚀 快速开始
+
+### 基础使用
 
 ```typescript
 import { createMonitor } from '@ldesign/monitor'
@@ -44,6 +78,8 @@ const monitor = createMonitor({
   enableBehavior: true,
 })
 
+monitor.init()
+
 // 性能监控自动开始
 // 错误自动捕获
 
@@ -56,6 +92,60 @@ try {
 } catch (error) {
   monitor.trackError(error, { action: 'user-action' })
 }
+```
+
+### 增强功能（一键启用）🆕
+
+```typescript
+import { createEnhancedMonitor } from '@ldesign/monitor'
+
+// 创建增强监控实例（一行代码启用所有功能）
+const monitor = createEnhancedMonitor({
+  dsn: 'https://your-endpoint.com/api/monitor',
+  projectId: 'my-enhanced-app',
+  environment: 'production',
+  
+  // 启用所有增强功能（默认配置）
+  enhanced: {
+    performance: {
+      customMarks: true,      // 自定义性能标记
+      longTasks: true,        // Long Tasks检测
+      memory: true,           // 内存监控
+      fps: false,             // FPS监控（生产环境建议关闭）
+      optimization: true,     // 优化建议
+    },
+    behavior: {
+      scrollDepth: true,      // 滚动深度追踪
+      timeOnPage: true,       // 停留时间统计
+    },
+    api: {
+      graphql: true,          // GraphQL监控
+      websocket: true,        // WebSocket监控
+    },
+    offline: {
+      enabled: true,          // 离线缓存
+      maxItems: 1000,         // 最大缓存条数
+      ttl: 7 * 24 * 60 * 60 * 1000, // 7天过期
+    },
+  },
+})
+
+monitor.init()
+
+// 使用增强功能
+monitor.mark('feature-start')
+await doSomething()
+monitor.mark('feature-end')
+const duration = monitor.measure('feature', 'feature-start', 'feature-end')
+
+// 追踪关键元素
+monitor.trackScrollElement('.hero-section')
+monitor.trackElementTime('.product-video')
+
+// 获取实时统计
+const stats = monitor.getEnhancedStats()
+const memory = monitor.getMemoryInfo()
+const suggestions = monitor.getOptimizationSuggestions()
 ```
 
 ## 📚 核心功能
@@ -116,11 +206,222 @@ monitor.setUser({
 
 查看完整的 [项目计划](./PROJECT_PLAN.md) 了解更多详情。
 
-## 📖 文档
+## 🔥 增强功能详解
 
+### 1. 性能增强
+
+#### 自定义性能标记
+
+```typescript
+// 标记关键节点
+monitor.mark('feature-start')
+await doSomething()
+monitor.mark('feature-end')
+const duration = monitor.measure('feature', 'feature-start', 'feature-end')
+```
+
+#### Long Tasks 检测
+
+```typescript
+monitor.on('performance:longtask', (taskInfo) => {
+  console.warn('Long task detected:', {
+    duration: taskInfo.duration,
+    startTime: taskInfo.startTime,
+  })
+})
+```
+
+#### 内存监控
+
+```typescript
+const memoryInfo = monitor.getMemoryInfo()
+if (memoryInfo && memoryInfo.usage > 0.8) {
+  console.warn('High memory usage:', memoryInfo)
+}
+
+// 监听内存泄漏
+monitor.on('performance:memory-leak', (detection) => {
+  console.error('Memory leak suspected:', detection.reason)
+})
+```
+
+#### FPS 监控
+
+```typescript
+monitor.on('performance:fps', (metric) => {
+  if (metric.value < 30) {
+    console.warn('Low FPS:', metric.value)
+  }
+})
+```
+
+#### 优化建议
+
+```typescript
+const suggestions = monitor.getOptimizationSuggestions()
+console.log('Performance score:', suggestions.score)
+console.log('Suggestions:', suggestions.suggestions)
+```
+
+### 2. 行为增强
+
+#### 滚动深度追踪
+
+```typescript
+// 追踪特定元素
+monitor.trackScrollElement('.hero-section')
+monitor.trackScrollElement('.cta-button')
+
+// 获取统计
+const scrollStats = monitor.getScrollStats()
+
+// 监听滚动事件
+monitor.on('behavior:scroll', (event) => {
+  if (event.milestone) {
+    console.log(`User scrolled to ${event.milestone}%`)
+  }
+})
+```
+
+#### 停留时间统计
+
+```typescript
+// 追踪元素停留时间
+monitor.trackElementTime('.product-video')
+
+// 获取统计
+const timeStats = monitor.getTimeStats()
+
+// 监听时间事件
+monitor.on('behavior:time', (event) => {
+  console.log('Active time:', event.activeTime)
+})
+```
+
+### 3. API 增强
+
+#### GraphQL 监控
+
+```typescript
+// 自动拦截 GraphQL 请求
+// 检测 N+1 查询问题
+monitor.on('api:graphql', (metrics) => {
+  if (metrics.hasNPlusOne) {
+    console.warn('N+1 query detected:', metrics.operationName)
+  }
+})
+
+// 获取字段使用统计
+const fieldStats = monitor.getGraphQLFieldStats()
+console.log('Most used fields:', fieldStats.slice(0, 10))
+```
+
+#### WebSocket 监控
+
+```typescript
+// 自动监控 WebSocket 连接
+monitor.on('api:websocket-connection', (conn) => {
+  console.log('WebSocket:', conn.type, conn.url)
+})
+
+monitor.on('api:websocket-message', (msg) => {
+  console.log('Message:', msg.direction, msg.size)
+})
+
+// 获取健康状态
+const wsMetrics = monitor.getWebSocketMetrics()
+wsMetrics.forEach(metrics => {
+  if (!metrics.isHealthy) {
+    console.warn('Unhealthy WebSocket:', metrics.url)
+  }
+})
+```
+
+### 4. 离线缓存
+
+```typescript
+// 获取离线队列统计
+const queueStats = await monitor.getOfflineQueueStats()
+console.log('Offline events:', queueStats.totalEvents)
+
+// 手动刷新队列
+await monitor.flushOfflineQueue()
+
+// 清除过期数据
+await monitor.clearExpiredOfflineData()
+```
+
+## 🎯 使用场景
+
+### 1. 电商结账流程监控
+
+```typescript
+async function monitorCheckoutFlow() {
+  monitor.mark('checkout-start')
+  
+  monitor.mark('step1-start')
+  await validateCart()
+  monitor.mark('step1-end')
+  monitor.measure('checkout-step1', 'step1-start', 'step1-end')
+  
+  monitor.mark('step2-start')
+  await processPayment()
+  monitor.mark('step2-end')
+  monitor.measure('checkout-step2', 'step2-start', 'step2-end')
+  
+  monitor.mark('checkout-end')
+  const total = monitor.measure('checkout-total', 'checkout-start', 'checkout-end')
+  
+  console.log(`Checkout completed in ${total}ms`)
+}
+```
+
+### 2. SPA 路由监控
+
+```typescript
+function setupRouterMonitoring(router) {
+  router.beforeEach((to, from, next) => {
+    monitor.mark(`route-${to.name}-start`)
+    next()
+  })
+  
+  router.afterEach((to) => {
+    monitor.mark(`route-${to.name}-end`)
+    const duration = monitor.measure(
+      `route-${to.name}`,
+      `route-${to.name}-start`,
+      `route-${to.name}-end`
+    )
+    console.log(`Route ${to.name} took ${duration}ms`)
+  })
+}
+```
+
+### 3. 实时性能监控仪表板
+
+```typescript
+function setupPerformanceDashboard() {
+  setInterval(() => {
+    const stats = monitor.getEnhancedStats()
+    
+    // 更新 UI
+    updateMemoryGauge(stats.performance.memory?.usage)
+    updateFPSDisplay(stats.performance.fps?.fps)
+    updateLongTaskCount(stats.performance.longTasks?.longTaskCount)
+    updateScrollDepth(stats.behavior.scroll?.maxDepthReached)
+    updateTimeOnPage(stats.behavior.time?.activeTime)
+  }, 5000)
+}
+```
+
+## 📚 文档
+
+- 🎉 [新功能指南](./NEW_FEATURES_GUIDE.md) - v0.2.0 新增功能使用指南
+- 📊 [功能增强文档](./FEATURE_ENHANCEMENTS.md) - 完整的功能增强实现总结
 - 📘 [API 文档](./docs/API.md) - 完整的 API 参考
 - 📗 [使用指南](./docs/GUIDE.md) - 深入的使用教程
 - 📕 [最佳实践](./docs/BEST_PRACTICES.md) - 性能优化和最佳实践
+- 📝 [增强监控使用示例](./examples/enhanced-monitor-usage.ts) - EnhancedMonitor 完整示例
 
 ## 🎯 更多示例
 
@@ -256,10 +557,11 @@ function MyComponent() {
 
 ## 🏗️ 开发状态
 
-当前版本 **v0.1.0** 已完成 **50+ 个模块**：
+当前版本 **v0.1.0** 已完成 **60+ 个模块**：
 
-### 核心架构 (6个模块)
+### 核心架构 (7个模块)
 - ✅ Monitor 核心类 - 统一API入口
+- ✅ EnhancedMonitor 增强监控 - 一键启用所有增强功能 🆕
 - ✅ EventEmitter - 发布订阅系统
 - ✅ 完整的类型系统（4个类型文件）
 - ✅ 工具函数库（20+工具函数）
@@ -298,8 +600,12 @@ function MyComponent() {
 - ✅ ClickTracker - 点击追踪
 - ✅ FormTracker - 表单追踪
 
-### API监控 (1个模块)
+### API监控 (5个模块)
 - ✅ APIInterceptor - XHR/Fetch拦截
+- ✅ GraphQLMonitor - GraphQL查询监控 🆕
+- ✅ GraphQLAnalyzer - N+1查询检测 🆕
+- ✅ WebSocketMonitor - WebSocket连接监控 🆕
+- ✅ OfflineStorageManager - 离线缓存 🆕
 
 ### 会话回放 (1个模块)
 - ✅ SessionRecorder - rrweb集成
@@ -319,6 +625,13 @@ function MyComponent() {
 ### 告警系统 (1个模块)
 - ✅ AlertEngine - 告警引擎
 
+### 增强功能 (5个模块) 🆕
+- ✅ PerformanceEnhancer - 自定义标记/Long Tasks/内存/FPS/优化建议
+- ✅ BehaviorEnhancer - 滚动深度/停留时间
+- ✅ ScrollDepthTracker - 滚动追踪
+- ✅ TimeOnPageTracker - 时间统计
+- ✅ MemoryMonitor - 内存监控与泄漏检测
+
 ### 框架集成 (2个模块)
 - ✅ Vue 3 插件和Composables
 - ✅ React Provider和Hooks
@@ -326,7 +639,7 @@ function MyComponent() {
 ### 可视化 (1个模块)
 - ✅ Dashboard组件
 
-### 文档和示例 (8个文件)
+### 文档和示例 (9个文件)
 - ✅ README.md - 项目介绍
 - ✅ API.md - API文档
 - ✅ GUIDE.md - 使用指南
@@ -335,6 +648,7 @@ function MyComponent() {
 - ✅ examples/vue-app.ts - Vue示例
 - ✅ examples/react-app.tsx - React示例
 - ✅ examples/advanced.ts - 高级示例
+- ✅ examples/enhanced-monitor-usage.ts - 增强监控示例 🆕
 
 ### 测试 (7个测试文件)
 - ✅ Monitor核心测试
@@ -346,12 +660,13 @@ function MyComponent() {
 - ✅ AnomalyDetector测试
 
 **代码量统计**:
-- 📁 **40+个TypeScript文件**
-- 📝 **~8,000+行代码**
+- 📁 **50+个TypeScript文件**
+- 📝 **~10,000+行代码**
 - ✅ **100% TypeScript类型覆盖**
 - 🧪 **>75% 单元测试覆盖率**
-- 📚 **4个完整的文档指南**
-- 💡 **4个实战示例**
+- 📚 **5个完整的文档指南**
+- 💡 **5个实战示例**
+- 🆕 **10+个增强功能模块**
 
 ## 🤝 贡献
 

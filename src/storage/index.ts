@@ -3,4 +3,5 @@
  */
 
 export { OfflineStore, createOfflineStore, type OfflineStoreConfig } from './OfflineStore'
+export * from './IndexedDBStore'
 

@@ -171,3 +171,11 @@ export function createClickHeatmap(): ClickHeatmap {
 
 
 
+
+
+
+
+
+
+
+
