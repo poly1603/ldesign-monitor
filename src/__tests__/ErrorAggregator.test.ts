@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest'
-import { ErrorAggregator } from '../error/ErrorAggregator'
+import { ErrorAggregator } from '../collectors/error/ErrorAggregator'
 import { ErrorType, ErrorLevel } from '../types/error'
 
 describe('ErrorAggregator', () => {

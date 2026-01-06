@@ -137,20 +137,22 @@ export class ErrorAggregator {
 
   /**
    * 规范化错误消息
-   * 移除动态内容（如数字、URL 等）
+   * 移除动态内容（如 UUID、时间戳、URL 等），但保留短数字以区分不同错误
    * 
    * @param message - 错误消息
    * @returns 规范化后的消息
    */
   private normalizeMessage(message: string): string {
     return message
-      // 移除数字
-      .replace(/\d+/g, '<number>')
+      // 移除 UUID
+      .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '<uuid>')
+      // 移除时间戳（13位数字）
+      .replace(/\b\d{13,}\b/g, '<timestamp>')
       // 移除 URL
       .replace(/https?:\/\/[^\s]+/g, '<url>')
-      // 移除引号内的内容
-      .replace(/"[^"]*"/g, '"<string>"')
-      .replace(/'[^']*'/g, "'<string>'")
+      // 移除引号内的内容（仅长字符串）
+      .replace(/"[^"]{20,}"/g, '"<string>"')
+      .replace(/'[^']{20,}'/g, "'<string>'")
       // 移除多余的空白
       .trim()
   }

@@ -36,6 +36,7 @@ describe('Monitor', () => {
 
   describe('性能追踪', () => {
     it('应该追踪性能指标', () => {
+      monitor.init()
       const spy = vi.fn()
       monitor.on('performance', spy)
 
@@ -49,6 +50,7 @@ describe('Monitor', () => {
     })
 
     it('应该在禁用时不追踪', () => {
+      monitor.init()
       const spy = vi.fn()
       monitor.on('performance', spy)
 
@@ -66,6 +68,7 @@ describe('Monitor', () => {
 
   describe('错误追踪', () => {
     it('应该追踪错误', () => {
+      monitor.init()
       const spy = vi.fn()
       monitor.on('error', spy)
 
@@ -79,6 +82,7 @@ describe('Monitor', () => {
     })
 
     it('应该包含错误上下文', () => {
+      monitor.init()
       const spy = vi.fn()
       monitor.on('error', spy)
 
@@ -93,6 +97,7 @@ describe('Monitor', () => {
 
   describe('事件追踪', () => {
     it('应该追踪自定义事件', () => {
+      monitor.init()
       const spy = vi.fn()
       monitor.on('event', spy)
 
@@ -108,6 +113,7 @@ describe('Monitor', () => {
 
   describe('页面浏览', () => {
     it('应该追踪页面浏览', () => {
+      monitor.init()
       const spy = vi.fn()
       monitor.on('event', spy)
 
@@ -117,6 +123,7 @@ describe('Monitor', () => {
     })
 
     it('应该添加面包屑', () => {
+      monitor.init()
       const spy = vi.fn()
       monitor.on('breadcrumb', spy)
 
@@ -194,6 +201,7 @@ describe('Monitor', () => {
           afterPerformance: hookSpy,
         },
       })
+      m.init()
 
       m.trackPerformance('test', 100)
 
@@ -210,6 +218,7 @@ describe('Monitor', () => {
           afterError: hookSpy,
         },
       })
+      m.init()
 
       m.trackError(new Error('Test'))
 
@@ -226,6 +235,7 @@ describe('Monitor', () => {
           beforeSend: () => null, // 拦截所有数据
         },
       })
+      m.init()
 
       m.on('report', reportSpy)
       m.trackPerformance('test', 100)
@@ -245,6 +255,7 @@ describe('Monitor', () => {
         projectId: 'test',
         sampleRate: 0,
       })
+      m.init()
 
       m.on('performance', spy)
       m.trackPerformance('test', 100)
@@ -260,6 +271,7 @@ describe('Monitor', () => {
         projectId: 'test',
         sampleRate: 1.0,
       })
+      m.init()
 
       m.on('performance', spy)
       m.trackPerformance('test', 100)

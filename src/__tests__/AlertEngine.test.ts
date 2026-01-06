@@ -178,43 +178,95 @@ describe('AlertEngine', () => {
   })
 
   describe('严重程度判断', () => {
-    it('应该正确判断严重程度', () => {
+    it('应该正确判断严重程度 - critical', () => {
       const callback = vi.fn()
 
       engine.addRule({
-        id: 'rule1',
-        name: 'Test Rule',
+        id: 'rule-critical',
+        name: 'Test Rule Critical',
         type: 'error_rate',
         condition: {
-          metric: 'test',
+          metric: 'test-critical',
           operator: '>',
           threshold: 100,
         },
         channels: [],
+        throttle: 0, // 禁用节流以便测试
       })
 
       engine.onAlert(callback)
 
       // Critical (ratio > 1.0)
-      engine.updateMetric('test', 250)
+      engine.updateMetric('test-critical', 250)
       expect(callback.mock.calls[0][0].severity).toBe('critical')
+    })
 
-      callback.mockClear()
+    it('应该正确判断严重程度 - high', () => {
+      const callback = vi.fn()
+
+      engine.addRule({
+        id: 'rule-high',
+        name: 'Test Rule High',
+        type: 'error_rate',
+        condition: {
+          metric: 'test-high',
+          operator: '>',
+          threshold: 100,
+        },
+        channels: [],
+        throttle: 0,
+      })
+
+      engine.onAlert(callback)
 
       // High (ratio > 0.5)
-      engine.updateMetric('test', 180)
+      engine.updateMetric('test-high', 180)
       expect(callback.mock.calls[0][0].severity).toBe('high')
+    })
 
-      callback.mockClear()
+    it('应该正确判断严重程度 - medium', () => {
+      const callback = vi.fn()
+
+      engine.addRule({
+        id: 'rule-medium',
+        name: 'Test Rule Medium',
+        type: 'error_rate',
+        condition: {
+          metric: 'test-medium',
+          operator: '>',
+          threshold: 100,
+        },
+        channels: [],
+        throttle: 0,
+      })
+
+      engine.onAlert(callback)
 
       // Medium (ratio > 0.2)
-      engine.updateMetric('test', 130)
+      engine.updateMetric('test-medium', 130)
       expect(callback.mock.calls[0][0].severity).toBe('medium')
+    })
 
-      callback.mockClear()
+    it('应该正确判断严重程度 - low', () => {
+      const callback = vi.fn()
+
+      engine.addRule({
+        id: 'rule-low',
+        name: 'Test Rule Low',
+        type: 'error_rate',
+        condition: {
+          metric: 'test-low',
+          operator: '>',
+          threshold: 100,
+        },
+        channels: [],
+        throttle: 0,
+      })
+
+      engine.onAlert(callback)
 
       // Low (ratio <= 0.2)
-      engine.updateMetric('test', 110)
+      engine.updateMetric('test-low', 110)
       expect(callback.mock.calls[0][0].severity).toBe('low')
     })
   })
